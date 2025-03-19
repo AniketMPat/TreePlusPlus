@@ -5,13 +5,35 @@
 #include <string>
 #include <vector>
 
+#define BBLK "\e[1;30m"
+#define BRED "\e[1;31m"
+#define BGRN "\e[1;32m"
+#define BYEL "\e[1;33m"
+#define BBLU "\e[1;34m"
+#define BMAG "\e[1;35m"
+#define BCYN "\e[1;36m"
+#define BWHT "\e[1;37m"
+
+#define BLK "\e[0;30m"
+#define RED "\e[0;31m"
+#define GRN "\e[0;32m"
+#define YEL "\e[0;33m"
+#define BLU "\e[0;34m"
+#define MAG "\e[0;35m"
+#define CYN "\e[0;36m"
+#define WHT "\e[0;37m"
+
+#define reset "\e[0m"
+#define CRESET "\e[0m"
+#define COLOR_RESET "\e[0m"
+
 namespace fs = std::filesystem;
 
 class Tree {
 private:
     // counting the number of directories and files
-    size_t directories;
-    size_t files;
+    size_t directories = 0;
+    size_t files = 0;
 
     // The current dir being worked on
     // On creating Tree this will be the cwd or input directory
@@ -22,27 +44,52 @@ private:
     std::vector<std::string> final_pointers = {"└── ", "    "};
 
 public:
-    Tree(std::string inputDir) {
+    void walk(std::string inputDir, std::string prefix) {
 
-        std::string pathStr = fs::current_path().string();
-        if (inputDir != ".") {
-            pathStr = pathStr + "/" + inputDir;
+        // Store items in current directory being walked
+        std::vector<fs::directory_entry> elements;
+        // Which type of line to use
+        std::vector<std::string> line;
+
+        // Push each entry in directory into vector
+        for (auto &entry : fs::directory_iterator(inputDir)) {
+            elements.push_back(entry);
         }
-        std::cout << pathStr << std::endl;
 
-        fs::path p = fs::path("..");
-        std::cout << p << std::endl;
+        for (auto &element : elements) {
+
+            // Determine line type
+            if (element == elements[elements.size() - 1]) {
+                line = final_pointers;
+            } else {
+                line = inner_pointers;
+            }
+
+            if (element.is_directory()) {
+                // Increment count and print dir name
+                // Do recursive call
+                directories++;
+                std::cout << BLU << prefix << line[0] << BGRN << element.path().filename().string() << CRESET << std::endl;
+                walk(element.path(), prefix + line[1]);
+            } else {
+                // Increment and print
+                files++;
+                std::cout << BLU << prefix << line[0] << RED << element.path().filename().string() << CRESET << std::endl;
+            }
+        }
     }
 
-    // void getInputDir(std::string &input) {
-    //     fs::path currPath = fs::current_path();
-    //     std::cout << currPath << std::endl;
-    // }
+    // Print summary of directory
+    void count() {
+        std::cout << "\n"
+                  << MAG << directories << " directories, " << files << " files" << CRESET << std::endl;
+    }
 };
 
 int main(int args, char *argv[]) {
 
-    std::string dir; // Name of directory we want to display
+    // Name of directory we want to display
+    std::string dir;
 
     // if args include directory name set the name or curr directory name instead
     if (args == 2) {
@@ -51,8 +98,13 @@ int main(int args, char *argv[]) {
         dir = ".";
     }
 
-    Tree tree(dir);
+    // Create tree object
+    Tree tree;
 
-    // std::string RED = "033[1;31m";
-    // std::string NOCOLOUR = "33[0m]";
+    // Print the parent directory
+    std::cout << BGRN << dir << CRESET << std::endl;
+    // Begin recursive walk
+    tree.walk(dir, "");
+
+    tree.count();
 }
