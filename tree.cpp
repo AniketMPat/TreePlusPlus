@@ -40,8 +40,8 @@ private:
     fs::directory_entry workingDir;
 
     // strings for labelling the tree
-    std::vector<std::string> inner_pointers = {"├── ", "│   "};
-    std::vector<std::string> final_pointers = {"└── ", "    "};
+    std::string insideLines[2] = {"├── ", "│   "};
+    std::string lastLines[2] = {"└── ", "    "};
 
 public:
     void walk(std::string inputDir, std::string prefix) {
@@ -49,7 +49,7 @@ public:
         // Store items in current directory being walked
         std::vector<fs::directory_entry> elements;
         // Which type of line to use
-        std::vector<std::string> line;
+        std::string *line;
 
         // Push each entry in directory into vector
         for (auto &entry : fs::directory_iterator(inputDir)) {
@@ -60,9 +60,9 @@ public:
 
             // Determine line type
             if (element == elements[elements.size() - 1]) {
-                line = final_pointers;
+                line = lastLines;
             } else {
-                line = inner_pointers;
+                line = insideLines;
             }
 
             if (element.is_directory()) {
